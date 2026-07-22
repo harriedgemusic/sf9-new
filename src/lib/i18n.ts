@@ -186,6 +186,8 @@ export interface Dict {
   // Candidate picker dialog
   pickerTitle: string
   pickerDescription: string
+  searchPickerTitle: string
+  searchPickerDescription: string
   pickerEmpty: string
   pickerSource: string
   pickerDuration: string
@@ -397,6 +399,8 @@ const ru: Dict = {
   stopped: 'Операция остановлена пользователем',
   pickerTitle: 'Выберите версию для скачивания',
   pickerDescription: 'Не найдено версии длиннее максимальной длительности. Выберите одну из найденных версий:',
+  searchPickerTitle: 'Выберите вариант для скачивания',
+  searchPickerDescription: 'Найдены следующие варианты по вашему запросу:',
   pickerEmpty: 'Нет доступных версий для выбора',
   pickerSource: 'Источник',
   pickerDuration: 'Длительность',
@@ -602,8 +606,10 @@ const enUS: Dict = {
   stop: 'Стоп',
   stopTitle: 'Остановить текущий поиск и скачивание',
   stopped: 'Операция остановлена пользователем',
-  pickerTitle: 'Выберите версию для скачивания',
-  pickerDescription: 'Не найдено версии длиннее максимальной длительности. Выберите одну из найденных версий:',
+  pickerTitle: 'Select version to download',
+  pickerDescription: 'No version longer than max duration was found. Select one of the found versions:',
+  searchPickerTitle: 'Select version to download',
+  searchPickerDescription: 'Found the following versions for your query:',
   pickerEmpty: 'Нет доступных версий для выбора',
   pickerSource: 'Источник',
   pickerDuration: 'Длительность',
@@ -811,6 +817,8 @@ const de: Dict = {
   stopped: 'Vom Benutzer gestoppt',
   pickerTitle: 'Version für Download wählen',
   pickerDescription: 'Keine Version länger als die maximale Dauer gefunden. Wählen Sie eine der gefundenen Versionen:',
+  searchPickerTitle: 'Version zum Herunterladen auswählen',
+  searchPickerDescription: 'Folgende Versionen wurden für Ihre Anfrage gefunden:',
   pickerEmpty: 'Keine Versionen zur Auswahl verfügbar',
   pickerSource: 'Quelle',
   pickerDuration: 'Dauer',
@@ -1018,6 +1026,8 @@ const uk: Dict = {
   stopped: 'Операция остановлена пользователем',
   pickerTitle: 'Выберите версию для скачивания',
   pickerDescription: 'Не найдено версии длиннее максимальной длительности. Выберите одну из найденных версий:',
+  searchPickerTitle: 'Оберіть версію для завантаження',
+  searchPickerDescription: 'Знайдено наступні варіанти за вашим запитом:',
   pickerEmpty: 'Нет доступных версий для выбора',
   pickerSource: 'Источник',
   pickerDuration: 'Длительность',
@@ -1225,6 +1235,8 @@ const fr: Dict = {
   stopped: 'Opération arrêtée par l\'utilisateur',
   pickerTitle: 'Choisir une version à télécharger',
   pickerDescription: 'Aucune version plus longue que la durée maximale trouvée. Choisissez l\'une des versions trouvées :',
+  searchPickerTitle: 'Sélectionnez une version à télécharger',
+  searchPickerDescription: 'Les versions suivantes ont été trouvées pour votre recherche :',
   pickerEmpty: 'Aucune version disponible à la sélection',
   pickerSource: 'Source',
   pickerDuration: 'Durée',

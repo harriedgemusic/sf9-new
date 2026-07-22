@@ -61,6 +61,8 @@ export function CandidatePickerDialog({
 }: CandidatePickerDialogProps) {
   const { t } = useSettings()
 
+  const isDirectSearch = !trackArtist
+
   // Sort: similar first, then by duration descending
   const sorted = [...candidates].sort((a, b) => {
     if (a.similar !== b.similar) return a.similar ? -1 : 1
@@ -69,18 +71,18 @@ export function CandidatePickerDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-2xl w-full overflow-hidden p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <AlertCircle className="size-5 text-amber-500" />
-            {t.pickerTitle}
+            <AlertCircle className="size-5 text-amber-500 shrink-0" />
+            {isDirectSearch ? (t.searchPickerTitle || t.pickerTitle) : t.pickerTitle}
           </DialogTitle>
           <DialogDescription>
-            {t.pickerDescription}
+            {isDirectSearch ? (t.searchPickerDescription || t.pickerDescription) : t.pickerDescription}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="text-sm text-muted-foreground mb-2">
+        <div className="text-sm text-muted-foreground mb-2 truncate">
           {trackArtist ? (
             <>
               <span className="font-medium text-foreground">{trackArtist}</span> — {trackTitle}
@@ -90,27 +92,26 @@ export function CandidatePickerDialog({
           )}
         </div>
 
-
         {sorted.length === 0 ? (
           <div className="py-8 text-center text-sm text-muted-foreground">
             {t.pickerEmpty}
           </div>
         ) : (
-          <ScrollArea className="max-h-[50vh] pr-3">
-            <ul className="space-y-2">
+          <ScrollArea className="max-h-[55vh] pr-2.5 -mr-1 w-full">
+            <ul className="space-y-2 w-full">
               {sorted.map((c, idx) => {
                 const isDownloading = downloadingUrl === c.url
                 return (
                   <li
                     key={`${c.url}-${idx}`}
-                    className={`flex items-center gap-3 p-3 rounded-md border transition-colors ${
+                    className={`flex items-center justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-md border transition-colors overflow-hidden ${
                       isDownloading
                         ? 'border-emerald-500 bg-emerald-500/10'
                         : 'border-border hover:bg-accent/40'
                     }`}
                   >
                     {/* Platform icon */}
-                    <div className={`size-9 shrink-0 rounded-md flex items-center justify-center ${
+                    <div className={`size-8 sm:size-9 shrink-0 rounded-md flex items-center justify-center ${
                       c.platform === 'YouTube'
                         ? 'bg-red-500/10 text-red-500'
                         : 'bg-orange-500/10 text-orange-500'
@@ -119,20 +120,20 @@ export function CandidatePickerDialog({
                     </div>
 
                     {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate" title={c.title}>{c.title}</p>
-                      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
-                        <Badge variant="outline" className="text-[10px] py-0 h-4">
+                    <div className="flex-1 min-w-0 pr-1">
+                      <p className="text-xs sm:text-sm font-medium truncate" title={c.title}>{c.title}</p>
+                      <div className="flex items-center gap-1.5 sm:gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
+                        <Badge variant="outline" className="text-[10px] py-0 h-4 shrink-0">
                           {c.platform}
                         </Badge>
-                        <span className="font-mono">{formatDuration(c.duration)}</span>
-                        {c.similar && (
-                          <Badge variant="outline" className="text-[9px] py-0 h-4 border-emerald-500/40 text-emerald-600 dark:text-emerald-400">
+                        <span className="font-mono text-[11px] sm:text-xs shrink-0">{formatDuration(c.duration)}</span>
+                        {!isDirectSearch && c.similar && (
+                          <Badge variant="outline" className="text-[9px] py-0 h-4 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 shrink-0">
                             {t.pickerSimilar}
                           </Badge>
                         )}
-                        {c.matches_filter && (
-                          <Badge variant="outline" className="text-[9px] py-0 h-4 border-blue-500/40 text-blue-600 dark:text-blue-400">
+                        {!isDirectSearch && c.matches_filter && (
+                          <Badge variant="outline" className="text-[9px] py-0 h-4 border-blue-500/40 text-blue-600 dark:text-blue-400 shrink-0">
                             {t.pickerMatches}
                           </Badge>
                         )}
@@ -143,7 +144,7 @@ export function CandidatePickerDialog({
                     <Button
                       size="sm"
                       variant={isDownloading ? 'default' : 'outline'}
-                      className="h-8 gap-1 shrink-0"
+                      className="h-8 text-xs px-2.5 sm:px-3 gap-1 shrink-0 whitespace-nowrap"
                       onClick={() => onPick(c)}
                       disabled={isDownloading}
                     >
