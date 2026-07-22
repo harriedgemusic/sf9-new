@@ -71,7 +71,7 @@ export function SettingsDialog({
     losslessCoreAvailable,
   } = useSettings()
 
-  const { user, setup2FA, enable2FA, disable2FA, changePassword } = useAuth()
+  const { user, token, setup2FA, enable2FA, disable2FA, changePassword } = useAuth()
 
   const [cookiesAvailable, setCookiesAvailable] = React.useState(false)
   const [cookieMsg, setCookieMsg] = React.useState("")
@@ -170,9 +170,14 @@ export function SettingsDialog({
 
   React.useEffect(() => {
     if (open) {
-      fetch('/api/spotify/cookies').then(r => r.json()).then(d => setCookiesAvailable(d.available)).catch(() => {})
+      fetch('/api/spotify/cookies', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+        .then(r => r.json())
+        .then(d => setCookiesAvailable(Boolean(d.available)))
+        .catch(() => {})
     }
-  }, [open])
+  }, [open, token])
 
   const handleSaveCookies = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -180,7 +185,10 @@ export function SettingsDialog({
     const ta = form.elements.namedItem('cookies') as HTMLTextAreaElement
     const res = await fetch('/api/spotify/cookies', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({ content: ta.value })
     })
     const data = await res.json()
