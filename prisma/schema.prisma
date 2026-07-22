@@ -1,0 +1,54 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  username     String        @unique @db.VarChar(191)
+  passwordHash String        @db.VarChar(255)
+  isAdmin      Boolean       @default(false)
+  totpSecret   String?       @db.VarChar(255)
+  totpEnabled  Boolean       @default(false)
+  settings     String        @default("{}") @db.VarChar(2000)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  sessions     Session[]
+  downloadLogs DownloadLog[]
+  systemLogs   SystemLog[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String   @db.VarChar(191)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique @db.VarChar(512)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model DownloadLog {
+  id          String   @id @default(cuid())
+  userId      String   @db.VarChar(191)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trackTitle  String   @db.Text
+  trackArtist String   @db.Text
+  searchMode  String   @db.VarChar(50) // 'extended' | 'simple'
+  format      String?  @db.VarChar(50)
+  status      String   @db.VarChar(50) // 'downloaded' | 'failed' | 'skipped'
+  createdAt   DateTime @default(now())
+}
+
+model SystemLog {
+  id        String   @id @default(cuid())
+  userId    String?  @db.VarChar(191)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  level     String   @db.VarChar(50) // 'info' | 'warning' | 'error'
+  message   String   @db.Text
+  extra     String?  @db.Text
+  createdAt DateTime @default(now())
+}
