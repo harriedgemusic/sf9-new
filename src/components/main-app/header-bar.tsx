@@ -170,10 +170,11 @@ export function HeaderBar({
               variant="destructive"
               size="sm"
               onClick={onStop}
-              className="h-10 gap-1.5 px-4 font-medium"
+              className="h-10 gap-1.5 px-4 font-semibold shadow-sm bg-red-600 hover:bg-red-700 text-white"
+              title={t.stopTitle || 'Остановить текущий поиск и скачивание'}
             >
-              <StopCircle className="h-4 w-4" />
-              {t.stop || 'Stop'}
+              <StopCircle className="h-4 w-4 animate-pulse" />
+              {t.stop || 'Стоп'}
             </Button>
           ) : (
             <Button
@@ -184,7 +185,7 @@ export function HeaderBar({
               className="h-10 gap-1.5 px-4 font-medium shadow-sm"
             >
               <Search className="h-4 w-4" />
-              {t.findTracks || 'Find Tracks'}
+              {t.findTracks || 'Поиск треков'}
             </Button>
           )}
         </div>

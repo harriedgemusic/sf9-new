@@ -115,6 +115,10 @@ export function LogPanel({ logs, onClear }: LogPanelProps) {
         ) : (
           <div className="space-y-1.5">
             {filteredLogs.map((log, idx) => {
+              const msg = log.message || ''
+              const isBeatportFound = msg.includes('Beatport: Found extended mix:') || msg.toLowerCase().includes('found extended mix')
+              const isReleaseTracks = /Found \d+ tracks in releases/i.test(msg) || msg.toLowerCase().includes('tracks in releases')
+
               const Icon =
                 log.level === 'error'
                   ? AlertCircle
@@ -127,7 +131,28 @@ export function LogPanel({ logs, onClear }: LogPanelProps) {
                   ? 'text-destructive bg-destructive/10 border-destructive/20'
                   : log.level === 'warning'
                   ? 'text-amber-600 dark:text-amber-400 bg-amber-500/10 border-amber-500/20'
+                  : isBeatportFound
+                  ? 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border-emerald-500/20 font-medium'
                   : 'text-muted-foreground bg-muted/30 border-border/30'
+
+              if (isReleaseTracks) {
+                return (
+                  <details
+                    key={idx}
+                    className="group rounded-md border border-border/40 bg-muted/20 px-2.5 py-1 text-xs transition-colors hover:border-border"
+                  >
+                    <summary className="cursor-pointer select-none font-mono text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-2">
+                      <span className="shrink-0 text-[10px] opacity-60 font-sans">{log.ts}</span>
+                      <span className="truncate">{msg}</span>
+                      <span className="ml-auto text-[10px] text-muted-foreground/70 shrink-0 group-open:hidden">▶ спойлер</span>
+                      <span className="ml-auto text-[10px] text-muted-foreground/70 shrink-0 hidden group-open:inline">▼ скрыть</span>
+                    </summary>
+                    <div className="mt-1.5 border-t border-border/30 pt-1.5 font-mono text-xs text-foreground whitespace-pre-wrap break-all">
+                      {msg}
+                    </div>
+                  </details>
+                )
+              }
 
               return (
                 <div

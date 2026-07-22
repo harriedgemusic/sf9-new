@@ -185,14 +185,22 @@ class JobsManager {
     })
     for (const [id, child] of this.runningChildren.entries()) {
       try {
+        if (child.pid) {
+          try { process.kill(-child.pid, 'SIGKILL') } catch {}
+        }
         child.kill('SIGTERM')
-        // Give it 500ms, then force-kill
         setTimeout(() => {
           try { child.kill('SIGKILL') } catch { /* already dead */ }
         }, 500)
       } catch { /* ignore */ }
       this.runningChildren.delete(id)
     }
+    try {
+      spawnSync('pkill', ['-f', 'yt-dlp'], { stdio: 'ignore' })
+    } catch {}
+    try {
+      spawnSync('pkill', ['-f', 'spotify_dl.py'], { stdio: 'ignore' })
+    } catch {}
     this.emit('active-status', { isDownloading: false, activeCount: 0 })
     this.emit('stopped', { at: Date.now() })
   }

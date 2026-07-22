@@ -145,15 +145,31 @@ export function TrackList({
                 </span>
 
                 {isDone ? (
-                  <Badge variant="outline" className="border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 gap-1 text-[11px] px-2 py-0.5">
-                    <CheckCircle className="h-3 w-3" />
-                    {t.downloaded || 'Ready'}
-                  </Badge>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => {
+                      const filename = downloadedFilesMap[track.title] || `${track.artist} - ${track.title}.mp3`
+                      const downloadUrl = `/api/spotify/file?name=${encodeURIComponent(filename)}`
+                      const a = document.createElement('a')
+                      a.href = downloadUrl
+                      a.download = filename
+                      document.body.appendChild(a)
+                      a.click()
+                      document.body.removeChild(a)
+                    }}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs h-8 gap-1.5 font-medium shadow-xs"
+                    title="Скачать файл в браузер"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    {t.save || 'Сохранить'}
+                  </Button>
                 ) : isNeedsPick ? (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => onPickCandidate(track)}
+                    disabled={isDownloading}
                     className="border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 text-xs h-8 gap-1"
                   >
                     <Sparkles className="h-3.5 w-3.5" />
@@ -161,13 +177,14 @@ export function TrackList({
                   </Button>
                 ) : isFailed ? (
                   <Button
-                    variant="outline"
+                    variant="destructive"
                     size="sm"
                     onClick={() => onDownloadSingle(track)}
-                    className="border-destructive/40 text-destructive hover:bg-destructive/10 text-xs h-8 gap-1"
+                    disabled={isDownloading}
+                    className="text-xs h-8 gap-1.5 font-medium shadow-xs"
                   >
                     <AlertCircle className="h-3.5 w-3.5" />
-                    {t.retry || 'Retry'}
+                    {t.retry || 'Повторить'}
                   </Button>
                 ) : (
                   <Button
@@ -178,7 +195,7 @@ export function TrackList({
                     className="text-xs h-8 gap-1.5"
                   >
                     <Download className="h-3.5 w-3.5" />
-                    {isDownloadingThis ? (t.downloading || 'Downloading...') : (t.download || 'Download')}
+                    {isDownloadingThis ? (t.downloading || 'Скачивание...') : (t.download || 'Скачать')}
                   </Button>
                 )}
 

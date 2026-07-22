@@ -119,8 +119,10 @@ export default function Home() {
     resetSummary,
   } = useJobsEvents(token)
 
-  const isDownloading = isServerDownloading
+  const [isBatchDownloading, setIsBatchDownloading] = useState(false)
+  const [singleDownloadingCount, setSingleDownloadingCount] = useState(0)
 
+  const isDownloading = isServerDownloading || isBatchDownloading || singleDownloadingCount > 0
 
   // Load Downloaded Files List
   const refreshFiles = useCallback(async () => {
@@ -155,6 +157,20 @@ export default function Home() {
       setCookiesDialogOpen(true)
     }
   }, [cookiesRequired])
+
+  // Stop process
+  const handleStop = useCallback(async () => {
+    setIsFetching(false)
+    setIsBatchDownloading(false)
+    setSingleDownloadingCount(0)
+    try {
+      await stop()
+      toast({ title: t.stop || 'Процесс остановлен' })
+      void refreshFiles()
+    } catch (e: any) {
+      toast({ title: 'Ошибка остановки', description: e.message, variant: 'destructive' })
+    }
+  }, [stop, refreshFiles, toast, t])
 
   // Fetch Spotify Tracks
   const handleFetch = useCallback(async () => {
@@ -191,6 +207,7 @@ export default function Home() {
   const handleDownloadSingle = useCallback(
     async (track: Track) => {
       setDownloadStatus((prev) => ({ ...prev, [track.title]: 'downloading' }))
+      setSingleDownloadingCount((c) => c + 1)
       try {
         const res = await downloadTrack(track, audioFormat, searchMode)
         if (res.ok && res.status === 'downloaded') {
@@ -206,6 +223,8 @@ export default function Home() {
         }
       } catch {
         setDownloadStatus((prev) => ({ ...prev, [track.title]: 'failed' }))
+      } finally {
+        setSingleDownloadingCount((c) => Math.max(0, c - 1))
       }
     },
     [downloadTrack, audioFormat, searchMode, refreshFiles]
@@ -214,6 +233,7 @@ export default function Home() {
   // Download All Tracks
   const handleDownloadAll = useCallback(async () => {
     if (tracks.length === 0) return
+    setIsBatchDownloading(true)
     try {
       await downloadAll(tracks, audioFormat, searchMode)
       void refreshFiles()
@@ -223,6 +243,8 @@ export default function Home() {
         description: e.message,
         variant: 'destructive',
       })
+    } finally {
+      setIsBatchDownloading(false)
     }
   }, [tracks, downloadAll, audioFormat, searchMode, refreshFiles, toast])
 
@@ -386,7 +408,7 @@ export default function Home() {
           onFetch={handleFetch}
           isFetching={isFetching}
           isDownloading={isDownloading}
-          onStop={stop}
+          onStop={handleStop}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenAdminSettings={() => setAdminSettingsOpen(true)}
           isAdmin={user?.isAdmin}
