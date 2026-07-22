@@ -73,5 +73,7 @@ fix_*.py
 logs.txt
 scratch_test/
 *.db
+cookies.txt
+youtube-cookies.txt
 
 
