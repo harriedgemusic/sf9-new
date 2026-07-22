@@ -24,78 +24,34 @@ import { join, basename } from 'path'
 import { createGzip } from 'zlib'
 import { Readable } from 'stream'
 import { db } from '@/lib/db'
+import { runPythonScript } from './jobs/process-runner'
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
-export interface Track {
-  title: string
-  artist: string
-  duration_ms: number
-  cover_url: string | null
-  spotify_url: string | null
-  track_id: string | null
-  album?: string
-  label?: string
-  release_date?: string
+import type {
+  Track,
+  LogLevel,
+  LogEntry,
+  JobSummary,
+  DownloadResult,
+  TrackCandidate,
+  FetchResult,
+  DownloadedFile,
+  ZipArchive,
+} from './jobs/types'
+
+export type {
+  Track,
+  LogLevel,
+  LogEntry,
+  JobSummary,
+  DownloadResult,
+  TrackCandidate,
+  FetchResult,
+  DownloadedFile,
+  ZipArchive,
 }
 
-export type LogLevel = 'info' | 'warning' | 'error'
 
-export interface LogEntry {
-  level: LogLevel
-  message: string
-  ts: string
-  extra?: Record<string, unknown>
-}
-
-export interface JobSummary {
-  downloaded: number
-  skipped: number
-  failed: number
-  total: number
-}
-
-export interface DownloadResult {
-  ok: boolean
-  status?: 'downloaded' | 'skipped' | 'failed' | 'needs_pick'
-  file?: string | null
-  message?: string
-  error?: string
-  candidates?: TrackCandidate[]
-  track?: Track
-}
-
-export interface TrackCandidate {
-  url: string
-  title: string
-  duration: number  // seconds
-  platform: 'YouTube' | 'SoundCloud'
-  matches_filter: boolean
-  similar: boolean
-}
-
-export interface FetchResult {
-  ok: boolean
-  entity_type?: 'playlist' | 'album' | 'track'
-  entity_id?: string
-  tracks?: Track[]
-  error?: string
-}
-
-export interface DownloadedFile {
-  name: string
-  size: number
-  mtime: number
-}
-
-export interface ZipArchive {
-  name: string
-  size: number
-  mtime: number
-  trackCount: number
-}
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -344,98 +300,17 @@ class JobsManager {
    * final payload.
    */
   private runPython(scriptName: string, args: string[], envExtra: Record<string, string> = {}): Promise<{ ok: boolean; payload: any; code: number }> {
-    return new Promise((resolvePromise) => {
-      // Pass cookies file env var so python script can append --cookies
-      // to yt-dlp if the file exists. Also pass SD_AUDIO_FORMAT so the
-      // python script knows which codec / container to use.
-      const cookiesExist = existsSync(this.cookiesFile)
-      const env = {
-        ...process.env,
-        PATH: `${process.env.PATH}:/home/z/.local/bin`,
-        YTDLP_COOKIES_FILE: cookiesExist ? this.cookiesFile : '',
-        ...envExtra,
-      }
-      const scriptPath = join(PROJECT_ROOT, 'scripts', scriptName)
-      const child = spawn(PYTHON_BIN, [scriptPath, ...args], {
-        env,
-        cwd: PROJECT_ROOT,
-      })
-
-      // Register this child so stop() can kill it.
-      const childId = `child-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-      this.runningChildren.set(childId, child)
-
-      let stdoutBuf = ''
-      let stderrBuf = ''
-      const finalPayloads: any[] = []
-
-      const handleLine = (line: string) => {
-        const trimmed = line.trim()
-        if (!trimmed) return
-        try {
-          const obj = JSON.parse(trimmed)
-          if (obj && typeof obj === 'object' && 'level' in obj && 'message' in obj) {
-            this.pushLog(obj as LogEntry)
-            return
-          }
-          finalPayloads.push(obj)
-        } catch {
-          this.pushLog({
-            level: 'info',
-            message: trimmed,
-            ts: new Date().toISOString().slice(11, 19),
-          })
-        }
-      }
-
-      child.stdout.on('data', (chunk: Buffer) => {
-        stdoutBuf += chunk.toString('utf8')
-        let nl
-        while ((nl = stdoutBuf.indexOf('\n')) !== -1) {
-          const line = stdoutBuf.slice(0, nl)
-          stdoutBuf = stdoutBuf.slice(nl + 1)
-          handleLine(line)
-        }
-      })
-
-      child.stderr.on('data', (chunk: Buffer) => {
-        stderrBuf += chunk.toString('utf8')
-        let nl
-        while ((nl = stderrBuf.indexOf('\n')) !== -1) {
-          const line = stderrBuf.slice(0, nl)
-          stderrBuf = stderrBuf.slice(nl + 1)
-          if (line.trim()) {
-            this.pushLog({
-              level: 'error',
-              message: `[python stderr] ${line.trim()}`,
-              ts: new Date().toISOString().slice(11, 19),
-            })
-          }
-        }
-      })
-
-      child.on('close', (code: number | null) => {
-        this.runningChildren.delete(childId)
-        if (stdoutBuf.trim()) handleLine(stdoutBuf)
-        const finalPayload = finalPayloads[finalPayloads.length - 1]
-        resolvePromise({
-          ok: (code ?? 0) === 0,
-          payload: finalPayload ?? { ok: false, error: 'No payload from python' },
-          code: code ?? 0,
-        })
-      })
-
-      child.on('error', (err: Error) => {
-        this.runningChildren.delete(childId)
-        this.pushLog({
-          level: 'error',
-          message: `Failed to spawn python: ${err.message}`,
-          ts: new Date().toISOString().slice(11, 19),
-        })
-        resolvePromise({ ok: false, payload: { ok: false, error: err.message }, code: -1 })
-      })
+    return runPythonScript({
+      scriptName,
+      args,
+      cookiesFile: this.cookiesFile,
+      envExtra,
+      onLog: (entry) => this.pushLog(entry),
+      onRegisterChild: (id, child) => this.runningChildren.set(id, child),
+      onUnregisterChild: (id) => this.runningChildren.delete(id),
     })
   }
+
 
   async fetch(url: string): Promise<FetchResult> {
     this.resetAbort()

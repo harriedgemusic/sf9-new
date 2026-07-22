@@ -1,31 +1,21 @@
-# Maestro Workflow Context
-Generated: 2026-07-21
+# Maestro Workflow Context — Beatspotto (sf9-new)
+Updated: 2026-07-23
 
-## Models & Providers
+## Detailed Architecture & Context
+For the comprehensive project topology, module relationships, and data flow map, see:
+👉 [.maestro/context.md](file:///Users/harriedgemusic/Documents/repos/sf9-new/.maestro/context.md)
+
+## Models & Environment
 - **Primary Model**: Gemini 3.6 Flash
-- **Interface/Environment**: IDE Agent Environment
-- **Context Window Size**: ~1,000,000 tokens
+- **Environment**: IDE Agent Environment
+- **Context Window**: ~1,000,000 tokens
 
-## Workflow Architecture
-- **Overview**: High-level task flow where the user defines web application development and refactoring tasks. The AI agent generates/modifies code and executes shell commands.
-- **Agent System**: Multi-agent / Subagent orchestration architecture.
-- **Available Tools**: File read/write, terminal command execution, web search.
+## High-Level Architecture & Modules
+- **Frontend UI**: Next.js 16 (App Router), React 19, Tailwind CSS v4, Shadcn UI, Zustand.
+- **API & SSE Layer**: Next.js API Routes, Server-Sent Events (`EventEmitter`), Prisma ORM (`MySQL`).
+- **Core Jobs Engine**: Per-user `JobsManager` singleton (`src/lib/jobs.ts`), `process-runner.ts` (Layer 5 Timeout Controls), `log-buffer.ts`, `file-manager.ts`.
+- **Processing Scripts**: Python 3 (`spotify_dl.py`, `simple_dl.py`, `lossless_core.py`), `yt-dlp`, Mutagen ID3 tagger, Go decryptor (`go-decryptor/`).
 
-## Quality & Evaluation
-- **Evaluation Method**: Direct code/UI review.
-- **Test Cases / Golden Examples**: None currently configured.
-- **Primary Failure Mode**: Regressions (fixing one part of the codebase breaks another part).
-
-## Constraints
-- **Cost Constraints**: No strict budget constraints.
-- **Latency Requirements**: Not critical.
-- **Compliance & Security**: Standard project constraints; no specialized regulatory compliance required.
-
-## Priorities
-1. **Quality** (Highest)
-2. **Safety**
-3. **Speed**
-4. **Cost** (Lowest)
-
-### Core Objective
-Eliminate code regressions during refactoring and feature implementation.
+## Quality & Test Baseline
+- **Automated Tests**: Vitest 4 suite (97/97 tests passing across 9 test files).
+- **Core Objective**: Zero code regressions during refactoring and feature implementation.
