@@ -97,14 +97,14 @@ export function CandidatePickerDialog({
             {t.pickerEmpty}
           </div>
         ) : (
-          <ScrollArea className="max-h-[55vh] pr-2.5 -mr-1 w-full">
-            <ul className="space-y-2 w-full">
+          <ScrollArea className="max-h-[55vh] w-full pr-1 overflow-x-hidden">
+            <ul className="space-y-2 w-full max-w-full overflow-hidden">
               {sorted.map((c, idx) => {
                 const isDownloading = downloadingUrl === c.url
                 return (
                   <li
                     key={`${c.url}-${idx}`}
-                    className={`flex items-center justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-md border transition-colors overflow-hidden ${
+                    className={`flex items-center justify-between gap-2 sm:gap-3 p-2.5 sm:p-3 rounded-md border transition-colors w-full box-border overflow-hidden ${
                       isDownloading
                         ? 'border-emerald-500 bg-emerald-500/10'
                         : 'border-border hover:bg-accent/40'
@@ -120,7 +120,7 @@ export function CandidatePickerDialog({
                     </div>
 
                     {/* Info */}
-                    <div className="flex-1 min-w-0 pr-1">
+                    <div className="flex-1 min-w-0 pr-1 overflow-hidden">
                       <p className="text-xs sm:text-sm font-medium truncate" title={c.title}>{c.title}</p>
                       <div className="flex items-center gap-1.5 sm:gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
                         <Badge variant="outline" className="text-[10px] py-0 h-4 shrink-0">
