@@ -29,9 +29,9 @@ export function LogPanel({ logs, onClear }: LogPanelProps) {
   })
 
   return (
-    <div className="flex h-full flex-col rounded-xl border border-border/60 bg-card text-card-foreground shadow-xs">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border/60 bg-card text-card-foreground shadow-xs">
       {/* Log Header */}
-      <div className="flex items-center justify-between border-b border-border/40 px-3.5 py-2.5">
+      <div className="flex items-center justify-between border-b border-border/40 px-3.5 py-2.5 shrink-0">
         <div className="flex items-center gap-2">
           <Terminal className="h-4 w-4 text-muted-foreground" />
           <h2 className="text-sm font-semibold text-foreground">
@@ -106,7 +106,7 @@ export function LogPanel({ logs, onClear }: LogPanelProps) {
       {/* Log Body */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-3 font-mono text-xs leading-relaxed"
+        className="flex-1 min-h-0 overflow-y-auto p-3 font-mono text-xs leading-relaxed"
       >
         {filteredLogs.length === 0 ? (
           <div className="flex h-full min-h-[160px] items-center justify-center text-muted-foreground/60">

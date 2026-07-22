@@ -41,7 +41,7 @@ export function TrackList({
 
   if (tracks.length === 0) {
     return (
-      <div className="flex h-full min-h-[280px] flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-card/50 p-6 text-center shadow-xs">
+      <div className="flex h-full min-h-0 flex-col items-center justify-center rounded-xl border border-dashed border-border/80 bg-card/50 p-6 text-center shadow-xs">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary mb-3">
           <Music className="h-6 w-6" />
         </div>
@@ -56,9 +56,9 @@ export function TrackList({
   }
 
   return (
-    <div className="flex h-full flex-col rounded-xl border border-border/60 bg-card text-card-foreground shadow-xs">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-border/60 bg-card text-card-foreground shadow-xs">
       {/* Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/40 px-4 py-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/40 px-4 py-3 shrink-0">
         <div className="flex items-center gap-2">
           <Music className="h-4 w-4 text-primary" />
           <h2 className="text-sm font-semibold text-foreground">
@@ -84,7 +84,7 @@ export function TrackList({
       </div>
 
       {/* Track Cards List */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-2">
         {tracks.map((track, idx) => {
           const status = downloadStatus[track.title]
           const isDone = status === 'done' || !!downloadedFilesMap[track.title]

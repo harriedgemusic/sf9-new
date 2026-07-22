@@ -395,9 +395,9 @@ export default function Home() {
         />
 
         {/* Main Content Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[500px]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Track List (7 Cols) */}
-          <div className="lg:col-span-7 flex flex-col min-h-[400px]">
+          <div className="lg:col-span-7 flex flex-col h-[480px] sm:h-[520px] lg:h-[560px] min-h-0">
             <TrackList
               tracks={tracks}
               downloadStatus={downloadStatus}
@@ -415,7 +415,7 @@ export default function Home() {
           </div>
 
           {/* Right Column: Execution Log (5 Cols) */}
-          <div className="lg:col-span-5 flex flex-col min-h-[400px]">
+          <div className="lg:col-span-5 flex flex-col h-[480px] sm:h-[520px] lg:h-[560px] min-h-0">
             <LogPanel logs={logs} onClear={clearLogs} />
           </div>
         </div>
