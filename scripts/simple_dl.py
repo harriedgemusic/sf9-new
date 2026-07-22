@@ -1061,7 +1061,7 @@ def main():
             return 1
         return cmd_download(sys.argv[2], sys.argv[3])
 
-    if cmd == "download_url":
+    if cmd in ("download_url", "download-url"):
         if len(sys.argv) < 6:
             print(json.dumps({"ok": False, "error": "Usage: simple_dl.py download_url <url> <artist> <title> <output_dir>"}))
             return 1
