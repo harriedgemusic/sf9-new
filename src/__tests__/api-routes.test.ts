@@ -171,14 +171,20 @@ describe('POST /api/spotify/download-url', () => {
     expect(data.error).toMatch(/missing/i)
   })
 
-  it('returns 400 for missing artist', async () => {
+  it('allows missing artist and calls downloadUrl', async () => {
+    const { getJobs } = await import('@/lib/jobs')
+    const mockJobs = getJobs('test-user') as any
+    mockJobs.downloadUrl.mockResolvedValueOnce({ ok: true, status: 'downloaded', file: 'T.mp3' })
+
     const req = makeRequest('http://localhost:3000/api/spotify/download-url', {
       method: 'POST',
       body: JSON.stringify({ url: 'https://youtube.com/watch?v=xxx', title: 'T' }),
       headers: { 'Content-Type': 'application/json' },
     })
     const res = await handler.POST(req)
-    expect(res.status).toBe(400)
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.ok).toBe(true)
   })
 })
 

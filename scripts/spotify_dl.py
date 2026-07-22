@@ -966,6 +966,31 @@ def cmd_download(track_json_str: str, output_dir: str):
     return 0 if result["status"] != "failed" else 2
 
 
+def download_direct_url(url: str, output_path: str) -> bool:
+    cookies_file = os.environ.get("YTDLP_COOKIES_FILE", "")
+    cmd = [
+        "yt-dlp",
+        "--extract-audio",
+        "--audio-format", "flac",
+        "--audio-quality", "0",
+        "-o", output_path,
+        "--no-playlist",
+        "--remote-components", "ejs:github",
+        url
+    ]
+    if cookies_file and os.path.exists(cookies_file):
+        cmd.extend(["--cookies", cookies_file])
+    try:
+        res = subprocess.run(cmd, capture_output=True, text=True)
+        if res.returncode != 0:
+            error(f"yt-dlp direct download failed: {res.stderr}")
+            return False
+        return os.path.exists(output_path)
+    except Exception as e:
+        error(f"yt-dlp direct download exception: {e}")
+        return False
+
+
 def cmd_download_url(url: str, artist: str, title: str, output_dir: str):
     """Download a specific URL directly (used when the user manually picks
     a candidate from the picker dialog).
@@ -975,30 +1000,53 @@ def cmd_download_url(url: str, artist: str, title: str, output_dir: str):
 
     audio_format = os.environ.get("SD_AUDIO_FORMAT", "mp3-320").strip()
     ext = ".wav" if audio_format == "wav-16-44100" else ".mp3"
+    safe_name = safe_filename(artist, title)
 
-    success, used_platform, err = try_download_with_fallback(url, artist, title, output_dir, "youtube")
-    if success:
-        filename = safe_filename(artist, title) + ext
-        info(f"Downloaded successfully", file=filename, platform=used_platform)
-        print(json.dumps({
-            "ok": True,
-            "status": "downloaded",
-            "file": filename,
-            "message": "OK",
-            "platform": used_platform,
-            "error": None,
-        }, ensure_ascii=False))
-        return 0
-    else:
-        error(f"Download failed for: {artist} - {title}")
-        print(json.dumps({
-            "ok": False,
-            "status": "failed",
-            "file": None,
-            "message": "Download failed",
-            "error": err,
-        }, ensure_ascii=False))
-        return 2
+    out_path_flac = os.path.join(output_dir, f"{safe_name}.flac")
+    final_path = os.path.join(output_dir, f"{safe_name}{ext}")
+
+    if download_direct_url(url, out_path_flac):
+        if os.path.exists(out_path_flac):
+            try:
+                ffmpeg_cmd = ["ffmpeg", "-y", "-i", out_path_flac, "-loglevel", "error"]
+                if ext == ".mp3":
+                    ffmpeg_cmd.extend(["-b:a", "320k"])
+                ffmpeg_cmd.append(final_path)
+                subprocess.run(ffmpeg_cmd, check=True)
+                os.remove(out_path_flac)
+            except Exception as e:
+                error(f"FFmpeg conversion failed: {e}")
+                print(json.dumps({
+                    "ok": False,
+                    "status": "failed",
+                    "file": None,
+                    "message": "FFmpeg conversion failed",
+                    "error": str(e),
+                }, ensure_ascii=False))
+                return 1
+
+        if os.path.exists(final_path):
+            filename = f"{safe_name}{ext}"
+            info(f"Downloaded successfully", file=filename, platform="YouTube")
+            print(json.dumps({
+                "ok": True,
+                "status": "downloaded",
+                "file": filename,
+                "message": "OK",
+                "platform": "YouTube",
+                "error": None,
+            }, ensure_ascii=False))
+            return 0
+
+    error(f"Download failed for: {artist} - {title}")
+    print(json.dumps({
+        "ok": False,
+        "status": "failed",
+        "file": None,
+        "message": "Download failed",
+        "error": "yt-dlp direct download failed",
+    }, ensure_ascii=False))
+    return 1
 
 
 def cmd_search_ytdlp(query: str, limit: int = 10):

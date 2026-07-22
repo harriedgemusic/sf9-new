@@ -32,8 +32,8 @@ export async function POST(req: NextRequest) {
   const artist = typeof body?.artist === 'string' ? body.artist : ''
   const title = typeof body?.title === 'string' ? body.title : ''
 
-  if (!url || !artist || !title) {
-    return NextResponse.json({ ok: false, error: 'Missing url, artist, or title' }, { status: 400 })
+  if (!url || !title) {
+    return NextResponse.json({ ok: false, error: 'Missing url or title' }, { status: 400 })
   }
 
   const audioFormat = body?.audioFormat === 'wav-16-44100' ? 'wav-16-44100' : 'mp3-320'
