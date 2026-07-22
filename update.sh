@@ -56,7 +56,16 @@ if [ ! -f ".env" ]; then
     exit 1
 fi
 
-# 4. Find Bun
+# 4. Install Deno if missing for yt-dlp EJS solver
+if ! command -v deno &> /dev/null && [ ! -f "/usr/local/bin/deno" ]; then
+    echo "[*] Installing Deno for yt-dlp EJS JavaScript solver..."
+    curl -fsSL https://deno.land/install.sh | sh || true
+    if [ -f "$HOME/.deno/bin/deno" ]; then
+        $SUDO cp "$HOME/.deno/bin/deno" /usr/local/bin/ 2>/dev/null || true
+    fi
+fi
+
+# 5. Find Bun
 TARGET_USER="${SUDO_USER:-$USER}"
 TARGET_HOME=$(eval echo "~$TARGET_USER")
 

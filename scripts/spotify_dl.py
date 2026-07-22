@@ -606,6 +606,7 @@ def download_youtube(query: str, output_path: str, duration_ms: int = 0):
         "--audio-quality", "0",
         "-o", output_path,
         "--no-playlist",
+        "--js-runtimes", "deno,node",
         "--remote-components", "ejs:github",
     ]
     if cookies_file and os.path.exists(cookies_file):
