@@ -75,5 +75,7 @@ scratch_test/
 *.db
 cookies.txt
 youtube-cookies.txt
+venv/
+.venv/
 
 
