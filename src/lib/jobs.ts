@@ -524,6 +524,17 @@ class JobsManager {
   }
 
   /**
+   * Search yt-dlp directly for song title / keyword queries.
+   */
+  async searchYtdlp(query: string): Promise<{ ok: boolean; candidates: TrackCandidate[]; error?: string }> {
+    const { payload, ok } = await this.runPython('spotify_dl.py', ['search_ytdlp', query])
+    if (ok && payload?.ok) {
+      return { ok: true, candidates: payload.candidates || [] }
+    }
+    return { ok: false, candidates: [], error: payload?.error || 'yt-dlp search failed' }
+  }
+
+  /**
    * Download a specific URL directly (used when the user manually picks a
    * candidate from the picker dialog). Bypasses the search algorithm.
    */

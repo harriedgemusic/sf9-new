@@ -585,7 +585,12 @@ def fetch_album_tracks(album_id: str) -> List[Track]:
 # -------------------------------------------------------------------
 
 def safe_filename(artist: str, title: str) -> str:
-    return re.sub(r'[<>:"/\\|?*]', "_", f"{artist} - {title}")
+    if artist and artist.strip():
+        raw_name = f"{artist} - {title}"
+    else:
+        raw_name = title
+    return re.sub(r'[<>:"/\\|?*]', "_", raw_name)
+
 
 
 
@@ -996,9 +1001,56 @@ def cmd_download_url(url: str, artist: str, title: str, output_dir: str):
         return 2
 
 
+def cmd_search_ytdlp(query: str, limit: int = 10):
+    """Direct yt-dlp search for song title / keyword queries."""
+    cookies_file = os.environ.get("YTDLP_COOKIES_FILE", "")
+    cmd = [
+        "yt-dlp",
+        "-j",
+        "--flat-playlist",
+        "--remote-components", "ejs:github",
+        f"ytsearch{limit}:{query}"
+    ]
+    if cookies_file and os.path.exists(cookies_file):
+        cmd.extend(["--cookies", cookies_file])
+
+    candidates = []
+    try:
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if proc.stdout:
+            for line in proc.stdout:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    data = json.loads(line)
+                    url = data.get("webpage_url") or data.get("url") or f"https://www.youtube.com/watch?v={data.get('id')}"
+                    title = data.get("title") or "Unknown Title"
+                    duration = int(data.get("duration") or 0)
+                    extractor = (data.get("extractor") or data.get("extractor_key") or "YouTube").lower()
+                    platform = "SoundCloud" if "soundcloud" in extractor else "YouTube"
+                    candidates.append({
+                        "url": url,
+                        "title": title,
+                        "duration": duration,
+                        "platform": platform,
+                        "matches_filter": True,
+                        "similar": True
+                    })
+                except Exception:
+                    pass
+        proc.wait()
+    except Exception as e:
+        print(json.dumps({"ok": False, "error": str(e), "candidates": []}, ensure_ascii=False))
+        return 1
+
+    print(json.dumps({"ok": True, "candidates": candidates}, ensure_ascii=False))
+    return 0
+
+
 def main():
     if len(sys.argv) < 2:
-        print(json.dumps({"ok": False, "error": "Usage: spotify_dl.py <fetch|download|download_url> ..."}))
+        print(json.dumps({"ok": False, "error": "Usage: spotify_dl.py <fetch|download|download_url|search_ytdlp> ..."}))
         return 1
 
     cmd = sys.argv[1]
@@ -1021,8 +1073,15 @@ def main():
             return 1
         return cmd_download_url(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
 
+    if cmd == "search_ytdlp":
+        if len(sys.argv) < 3:
+            print(json.dumps({"ok": False, "error": "Usage: spotify_dl.py search_ytdlp <query>"}))
+            return 1
+        return cmd_search_ytdlp(sys.argv[2])
+
     print(json.dumps({"ok": False, "error": f"Unknown command: {cmd}"}))
     return 1
+
 
 
 if __name__ == "__main__":

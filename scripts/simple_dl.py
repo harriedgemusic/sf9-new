@@ -585,7 +585,12 @@ def fetch_album_tracks(album_id: str) -> List[Track]:
 # -------------------------------------------------------------------
 
 def safe_filename(artist: str, title: str) -> str:
-    return re.sub(r'[<>:"/\\|?*]', "_", f"{artist} - {title}")
+    if artist and artist.strip():
+        raw_name = f"{artist} - {title}"
+    else:
+        raw_name = title
+    return re.sub(r'[<>:"/\\|?*]', "_", raw_name)
+
 
 
 

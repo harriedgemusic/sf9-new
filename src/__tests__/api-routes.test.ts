@@ -23,6 +23,7 @@ vi.mock('@/lib/jobs', () => {
     hasCookies: vi.fn(() => false),
     getCookiesRequested: vi.fn(() => false),
     fetch: vi.fn(),
+    searchYtdlp: vi.fn(),
     download: vi.fn(),
     downloadUrl: vi.fn(),
     downloadAll: vi.fn(),
@@ -316,3 +317,55 @@ describe('GET /api/spotify/files', () => {
     expect(typeof data.cookiesAvailable).toBe('boolean')
   })
 })
+
+describe('POST /api/spotify/search-ytdlp', () => {
+  let handler: typeof import('@/app/api/spotify/search-ytdlp/route')
+
+  beforeEach(async () => {
+    vi.resetModules()
+    handler = await import('@/app/api/spotify/search-ytdlp/route')
+  })
+
+  it('returns 400 for missing query', async () => {
+    const req = makeRequest('http://localhost:3000/api/spotify/search-ytdlp', {
+      method: 'POST',
+      body: JSON.stringify({ query: '' }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    const res = await handler.POST(req)
+    expect(res.status).toBe(400)
+    const data = await res.json()
+    expect(data.error).toMatch(/missing/i)
+  })
+
+  it('calls searchYtdlp and returns results', async () => {
+    const { getJobs } = await import('@/lib/jobs')
+    const mockJobs = getJobs('test-user') as any
+    mockJobs.searchYtdlp.mockResolvedValueOnce({
+      ok: true,
+      candidates: [
+        {
+          url: 'https://youtube.com/watch?v=123',
+          title: 'Song Title',
+          duration: 210,
+          platform: 'YouTube',
+          matches_filter: true,
+          similar: true,
+        },
+      ],
+    })
+
+    const req = makeRequest('http://localhost:3000/api/spotify/search-ytdlp', {
+      method: 'POST',
+      body: JSON.stringify({ query: 'Song Title' }),
+      headers: { 'Content-Type': 'application/json' },
+    })
+    const res = await handler.POST(req)
+    expect(res.status).toBe(200)
+    const data = await res.json()
+    expect(data.ok).toBe(true)
+    expect(data.candidates).toHaveLength(1)
+    expect(data.candidates[0].title).toBe('Song Title')
+  })
+})
+

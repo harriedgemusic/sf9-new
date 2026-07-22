@@ -381,8 +381,46 @@ export default function Home() {
       toast({ title: t.toastEnterUrl, description: t.toastEnterUrlDesc, variant: 'destructive' })
       return
     }
-    if (!/spotify\.com\/(playlist|album|track)\//.test(trimmed) && !/^spotify:(track|album|playlist):/.test(trimmed)) {
-      toast({ title: t.toastInvalidUrl, description: t.toastInvalidUrlDesc, variant: 'destructive' })
+
+    const isSpotifyUrl = trimmed.startsWith('https://open.spotify.com') ||
+                         trimmed.startsWith('http://open.spotify.com') ||
+                         trimmed.startsWith('spotify:')
+
+    if (!isSpotifyUrl) {
+      setFetching(true)
+      try {
+        const r = await fetch('/api/spotify/search-ytdlp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ query: trimmed }),
+        })
+        const data = await r.json()
+        if (data.ok && data.candidates && data.candidates.length > 0) {
+          setPickerCandidates(data.candidates)
+          setPickerTrack({
+            artist: '',
+            title: trimmed,
+          })
+          setPickerOpen(true)
+        } else {
+          toast({
+            title: t.toastFetchError,
+            description: data.error || t.pickerEmpty,
+            variant: 'destructive',
+          })
+        }
+      } catch (e: any) {
+        toast({
+          title: t.toastRequestError,
+          description: e.message,
+          variant: 'destructive',
+        })
+      } finally {
+        setFetching(false)
+      }
       return
     }
 
@@ -427,7 +465,8 @@ export default function Home() {
     } finally {
       setFetching(false)
     }
-  }, [url, fetchTracks, toast, t])
+  }, [url, fetchTracks, toast, t, token])
+
 
   const handleDownload = useCallback(async (track: Track) => {
     const id = trackId(track)
