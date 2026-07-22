@@ -24,16 +24,33 @@ export async function GET(req: NextRequest) {
   }
 
   const safe = basename(name)
+  const archive = await jobs.getArchiveStream(safe)
+  if (archive) {
+    const encodedName = encodeURIComponent(safe)
+    const asciiName = safe.replace(/["\r\n]/g, '_')
+    return new NextResponse(archive.stream as any, {
+      status: 200,
+      headers: {
+        'Content-Type': archive.mime,
+        'Content-Disposition': `attachment; filename="${asciiName}"; filename*=UTF-8''${encodedName}`,
+        'Content-Length': archive.size.toString(),
+        'Cache-Control': 'no-store',
+      },
+    })
+  }
+
   const result = await jobs.readArchive(safe)
   if (!result) {
     return NextResponse.json({ ok: false, error: 'Archive not found' }, { status: 404 })
   }
 
+  const encodedName = encodeURIComponent(safe)
+  const asciiName = safe.replace(/["\r\n]/g, '_')
   return new NextResponse(result.data as any, {
     status: 200,
     headers: {
       'Content-Type': result.mime,
-      'Content-Disposition': `attachment; filename="${encodeURIComponent(safe)}"`,
+      'Content-Disposition': `attachment; filename="${asciiName}"; filename*=UTF-8''${encodedName}`,
       'Content-Length': result.data.length.toString(),
       'Cache-Control': 'no-store',
     },

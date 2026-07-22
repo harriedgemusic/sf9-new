@@ -12,6 +12,10 @@ export async function getUserFromRequest(req: NextRequest): Promise<JwtPayload |
     // Fallback to query param for GET requests like file downloads via <a> tag
     token = req.nextUrl.searchParams.get('token') || undefined
   }
+  if (!token) {
+    // Fallback to cookie
+    token = req.cookies.get('sf9-token')?.value || req.cookies.get('sf9-auth-token')?.value
+  }
   if (!token) return null
   return verifyToken(token)
 }

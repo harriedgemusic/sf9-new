@@ -25,18 +25,35 @@ export async function GET(req: NextRequest) {
 
   const safe = basename(name)
   try {
+    const file = await jobs.getFileStream(safe)
+    if (file) {
+      const encodedName = encodeURIComponent(safe)
+      const asciiName = safe.replace(/["\r\n]/g, '_')
+      return new NextResponse(file.stream as any, {
+        status: 200,
+        headers: {
+          'Content-Type': file.mime,
+          'Content-Disposition': `attachment; filename="${asciiName}"; filename*=UTF-8''${encodedName}`,
+          'Content-Length': file.size.toString(),
+          'Cache-Control': 'no-store',
+        },
+      })
+    }
+
     const data = await jobs.readFile(safe)
     if (!data) {
       return NextResponse.json({ ok: false, error: 'File not found' }, { status: 404 })
     }
 
     const mime = safe.toLowerCase().endsWith('.wav') ? 'audio/wav' : 'audio/mpeg'
+    const encodedName = encodeURIComponent(safe)
+    const asciiName = safe.replace(/["\r\n]/g, '_')
 
     return new NextResponse(data as any, {
       status: 200,
       headers: {
         'Content-Type': mime,
-        'Content-Disposition': `attachment; filename="${encodeURIComponent(safe)}"`,
+        'Content-Disposition': `attachment; filename="${asciiName}"; filename*=UTF-8''${encodedName}`,
         'Content-Length': data.length.toString(),
         'Cache-Control': 'no-store',
       },

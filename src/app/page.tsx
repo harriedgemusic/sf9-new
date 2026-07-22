@@ -931,11 +931,11 @@ export default function Home() {
                             <Badge variant="default" className="bg-emerald-600 gap-1 py-0.5">
                               <CircleCheck className="size-3" /> {t.downloaded}
                             </Badge>
-                            <a href={`/api/spotify/file?name=${encodeURIComponent(actualFilenames.get(id) || expectedFilename)}&token=${token || ''}`} download>
-                              <Button size="sm" variant="outline" className="h-7 gap-1 text-xs">
+                            <Button asChild size="sm" variant="outline" className="h-7 gap-1 text-xs">
+                              <a href={`/api/spotify/file?name=${encodeURIComponent(actualFilenames.get(id) || expectedFilename)}&token=${encodeURIComponent(token || '')}`} download>
                                 <Save className="size-3.5" /> {t.save}
-                              </Button>
-                            </a>
+                              </a>
+                            </Button>
                           </>
                         ) : isSkipped ? (
                           <Badge variant="outline" className="gap-1 py-0.5 border-amber-500/50 text-amber-600 dark:text-amber-400">
@@ -1075,11 +1075,11 @@ export default function Home() {
                       {lastZip?.name === a.name && <span className="ml-1 text-emerald-500">· {t.lastArchive}</span>}
                     </p>
                   </div>
-                  <a href={`/api/spotify/archive?name=${encodeURIComponent(a.name)}&token=${token || ''}`} download>
-                    <Button size="sm" variant="outline" className="h-6 gap-1 text-[11px] bg-emerald-600 text-white hover:bg-emerald-700">
+                  <Button asChild size="sm" variant="outline" className="h-6 gap-1 text-[11px] bg-emerald-600 text-white hover:bg-emerald-700">
+                    <a href={`/api/spotify/archive?name=${encodeURIComponent(a.name)}&token=${encodeURIComponent(token || '')}`} download>
                       <Download className="size-3" /> ZIP
-                    </Button>
-                  </a>
+                    </a>
+                  </Button>
                 </li>
               ))}
               {/* Audio files (mp3 + wav) */}
@@ -1101,11 +1101,11 @@ export default function Home() {
                         WAV
                       </Badge>
                     )}
-                    <a href={`/api/spotify/file?name=${encodeURIComponent(f.name)}&token=${token || ''}`} download>
-                      <Button size="sm" variant="ghost" className="h-6 w-7 p-0" title={t.save}>
+                    <Button asChild size="sm" variant="ghost" className="h-6 w-7 p-0" title={t.save}>
+                      <a href={`/api/spotify/file?name=${encodeURIComponent(f.name)}&token=${encodeURIComponent(token || '')}`} download>
                         <Save className="size-3.5" />
-                      </Button>
-                    </a>
+                      </a>
+                    </Button>
                     <Button
                       size="sm"
                       variant="ghost"

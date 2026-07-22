@@ -22,6 +22,7 @@ import { existsSync, createReadStream, createWriteStream } from 'fs'
 import { mkdir, readdir, stat, unlink, readFile, writeFile } from 'fs/promises'
 import { join, basename } from 'path'
 import { createGzip } from 'zlib'
+import { Readable } from 'stream'
 import { db } from '@/lib/db'
 
 // ---------------------------------------------------------------------------
@@ -799,6 +800,22 @@ class JobsManager {
   }
 
   /**
+   * Stream the archive file using web ReadableStream to avoid loading large archives in memory.
+   */
+  async getArchiveStream(name: string): Promise<{ stream: ReadableStream; size: number; mime: string } | null> {
+    const safe = basename(name)
+    const filePath = join(this.outputDir, safe)
+    if (!filePath.startsWith(this.outputDir) || !existsSync(filePath)) return null
+    const s = await stat(filePath)
+    const nodeStream = createReadStream(filePath)
+    const mime = safe.endsWith('.zip') ? 'application/zip'
+      : safe.endsWith('.tar.gz') || safe.endsWith('.tgz') ? 'application/gzip'
+      : 'application/octet-stream'
+    return { stream: Readable.toWeb(nodeStream) as unknown as ReadableStream, size: s.size, mime }
+  }
+
+
+  /**
    * Wipe the entire download history: deletes all MP3 + archive files in
    * the output directory, clears the in-memory log buffer, resets the
    * download summary, and notifies all connected clients. Optional cookies
@@ -899,6 +916,16 @@ class JobsManager {
     const filePath = join(this.outputDir, safe)
     if (!filePath.startsWith(this.outputDir) || !existsSync(filePath)) return null
     return await readFile(filePath)
+  }
+
+  async getFileStream(name: string): Promise<{ stream: ReadableStream; size: number; mime: string } | null> {
+    const safe = basename(name)
+    const filePath = join(this.outputDir, safe)
+    if (!filePath.startsWith(this.outputDir) || !existsSync(filePath)) return null
+    const s = await stat(filePath)
+    const nodeStream = createReadStream(filePath)
+    const mime = safe.toLowerCase().endsWith('.wav') ? 'audio/wav' : 'audio/mpeg'
+    return { stream: Readable.toWeb(nodeStream) as unknown as ReadableStream, size: s.size, mime }
   }
 
   async deleteFile(name: string): Promise<boolean> {

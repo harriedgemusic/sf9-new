@@ -31,6 +31,8 @@ vi.mock('@/lib/jobs', () => {
     listArchives: vi.fn(() => []),
     readFile: vi.fn(),
     readArchive: vi.fn(),
+    getFileStream: vi.fn(),
+    getArchiveStream: vi.fn(),
     deleteFile: vi.fn(),
     saveCookies: vi.fn(),
     deleteCookies: vi.fn(),
@@ -374,4 +376,93 @@ describe('POST /api/spotify/search-ytdlp', () => {
     expect(data.candidates[0].title).toBe('Song Title')
   })
 })
+
+describe('GET /api/spotify/archive', () => {
+  let handler: typeof import('@/app/api/spotify/archive/route')
+
+  beforeEach(async () => {
+    vi.resetModules()
+    handler = await import('@/app/api/spotify/archive/route')
+  })
+
+  it('returns 400 when ?name= is missing', async () => {
+    const req = makeRequest('http://localhost:3000/api/spotify/archive')
+    const res = await handler.GET(req)
+    expect(res.status).toBe(400)
+  })
+
+  it('returns 404 when archive is not found', async () => {
+    const { getJobs } = await import('@/lib/jobs')
+    const mockJobs = getJobs('test-user') as any
+    mockJobs.getArchiveStream.mockResolvedValueOnce(null)
+    mockJobs.readArchive.mockResolvedValueOnce(null)
+
+    const req = makeRequest('http://localhost:3000/api/spotify/archive?name=nonexistent.zip')
+    const res = await handler.GET(req)
+    expect(res.status).toBe(404)
+  })
+
+  it('returns stream with correct headers when archive exists', async () => {
+    const { getJobs } = await import('@/lib/jobs')
+    const mockJobs = getJobs('test-user') as any
+    const fakeStream = new ReadableStream()
+    mockJobs.getArchiveStream.mockResolvedValueOnce({
+      stream: fakeStream,
+      size: 1024,
+      mime: 'application/zip',
+    })
+
+    const req = makeRequest('http://localhost:3000/api/spotify/archive?name=test.zip')
+    const res = await handler.GET(req)
+    expect(res.status).toBe(200)
+    expect(res.headers.get('Content-Type')).toBe('application/zip')
+    expect(res.headers.get('Content-Disposition')).toContain('attachment; filename=')
+    expect(res.headers.get('Content-Length')).toBe('1024')
+  })
+})
+
+describe('GET /api/spotify/file', () => {
+  let handler: typeof import('@/app/api/spotify/file/route')
+
+  beforeEach(async () => {
+    vi.resetModules()
+    handler = await import('@/app/api/spotify/file/route')
+  })
+
+  it('returns 400 when ?name= is missing', async () => {
+    const req = makeRequest('http://localhost:3000/api/spotify/file')
+    const res = await handler.GET(req)
+    expect(res.status).toBe(400)
+  })
+
+  it('returns 404 when file is not found', async () => {
+    const { getJobs } = await import('@/lib/jobs')
+    const mockJobs = getJobs('test-user') as any
+    mockJobs.getFileStream.mockResolvedValueOnce(null)
+    mockJobs.readFile.mockResolvedValueOnce(null)
+
+    const req = makeRequest('http://localhost:3000/api/spotify/file?name=nonexistent.mp3')
+    const res = await handler.GET(req)
+    expect(res.status).toBe(404)
+  })
+
+  it('returns stream with correct headers when file exists', async () => {
+    const { getJobs } = await import('@/lib/jobs')
+    const mockJobs = getJobs('test-user') as any
+    const fakeStream = new ReadableStream()
+    mockJobs.getFileStream.mockResolvedValueOnce({
+      stream: fakeStream,
+      size: 2048,
+      mime: 'audio/mpeg',
+    })
+
+    const req = makeRequest('http://localhost:3000/api/spotify/file?name=song.mp3')
+    const res = await handler.GET(req)
+    expect(res.status).toBe(200)
+    expect(res.headers.get('Content-Type')).toBe('audio/mpeg')
+    expect(res.headers.get('Content-Disposition')).toContain('attachment; filename=')
+    expect(res.headers.get('Content-Length')).toBe('2048')
+  })
+})
+
 
