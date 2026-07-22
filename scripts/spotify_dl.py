@@ -33,6 +33,11 @@ import difflib
 from typing import List, Optional
 from dataclasses import dataclass, asdict
 
+# Ensure system binary paths (like /usr/local/bin where deno/node live) are in PATH for yt-dlp
+_extra_paths = ["/usr/local/bin", "/usr/bin", os.path.expanduser("~/.deno/bin"), os.path.expanduser("~/.bun/bin")]
+_curr_path = os.environ.get("PATH", "")
+os.environ["PATH"] = ":".join([p for p in _extra_paths if p and p not in _curr_path.split(":")]) + ":" + _curr_path
+
 # Optional imports for ID3v2.3 metadata embedding (used for embedding
 # rich metadata from Lossless-Core into MP3 files).
 try:
