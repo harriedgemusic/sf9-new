@@ -313,7 +313,7 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col p-6 overflow-hidden">
+      <DialogContent className="max-w-[95vw] sm:max-w-5xl md:max-w-6xl max-h-[85vh] flex flex-col p-6 overflow-hidden">
         <DialogHeader className="pb-3 border-b border-border">
           <DialogTitle className="flex items-center gap-2 text-xl font-bold">
             <Shield className="size-6 text-emerald-500" />
