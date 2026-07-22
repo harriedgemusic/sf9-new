@@ -113,7 +113,8 @@ echo "[*] Updating Python Virtual Environment..."
 python3 -m venv venv
 source venv/bin/activate
 pip install --upgrade pip
-pip install curl_cffi requests beautifulsoup4 opencv-python numpy yt-dlp mutagen
+pip install curl_cffi requests beautifulsoup4 opencv-python numpy mutagen
+pip install --upgrade https://github.com/yt-dlp/yt-dlp/archive/master.tar.gz
 deactivate
 
 # 8. Go Decryptor Build
